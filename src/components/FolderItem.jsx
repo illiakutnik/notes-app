@@ -10,6 +10,7 @@ import EditIcon from '@material-ui/icons/Edit';
 import NoteAddIcon from '@material-ui/icons/NoteAdd';
 import { makeStyles } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
+import cn from 'classnames';
 import { ContextMenu, MenuItem, ContextMenuTrigger } from 'react-contextmenu';
 import {
   editFolder,
@@ -198,9 +199,14 @@ const FolderItem = ({
     <>
       <ListItem
         ref={drop}
-        className={`${classes.listItem} ${classes.listItemMobile} ${
-          selectedFolder === id && !editMode && classes.listItemSelected
-        } ${isOver && classes.drop}`}
+        className={cn(
+          classes.listItem,
+          classes.listItemMobile,
+          {
+            [classes.listItemSelected]: selectedFolder === id && !editMode,
+          },
+          { [classes.drop]: isOver }
+        )}
       >
         {editMode ? editField : defaultField}
       </ListItem>

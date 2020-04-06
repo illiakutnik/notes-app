@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
+import cn from 'classnames';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import Button from '@material-ui/core/Button';
 import List from '@material-ui/core/List';
@@ -41,7 +42,11 @@ const FolderList = ({ folders, addFolder }) => {
   const isMobile = useMediaQuery('(max-width: 600px)');
 
   return (
-    <div className={`${isMobile && classes.wrapperMobile} ${classes.wrapper}`}>
+    <div
+      className={cn(classes.wrapper, {
+        [classes.wrapperMobile]: isMobile,
+      })}
+    >
       {folders.length < 1 ? (
         <p className={classes.txt}>
           You do not have any folders yet, please add some by clicking the

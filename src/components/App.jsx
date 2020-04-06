@@ -4,6 +4,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Backend from 'react-dnd-html5-backend';
 import { DndProvider } from 'react-dnd';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
+import cn from 'classnames';
 
 import UpperMenu from './UpperMenu';
 import FolderList from './FolderList';
@@ -27,7 +28,9 @@ function App() {
 
   return (
     <DndProvider backend={Backend}>
-      {!isMobile ? (
+      {isMobile ? (
+        <FolderList />
+      ) : (
         <Grid container>
           <UpperMenu
             show={showFolders}
@@ -36,7 +39,9 @@ function App() {
           <Grid
             item
             xs={3}
-            className={`${classes.grid} ${showFolders || classes.foldersHide}`}
+            className={cn(classes.grid, {
+              [classes.foldersHide]: !showFolders,
+            })}
           >
             <FolderList />
           </Grid>
@@ -47,8 +52,6 @@ function App() {
             <Note />
           </Grid>
         </Grid>
-      ) : (
-        <FolderList />
       )}
     </DndProvider>
   );

@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
+import cn from 'classnames';
 import List from '@material-ui/core/List';
+import update from 'immutability-helper';
 import NoteListItem from './NoteListItem';
 
 const useStyles = makeStyles({
@@ -28,23 +30,45 @@ const useStyles = makeStyles({
   },
 });
 
-const NotesList = ({ notes, selectedFolder }) => {
+const NotesList = ({ filteredNotes }) => {
   const classes = useStyles();
   const isMobile = useMediaQuery('(max-width: 600px)');
 
-  const filteredNotes = notes.filter((note) => note.folder === selectedFolder);
+  const [notes, setNotes] = useState(filteredNotes);
+
+  useEffect(() => {
+    setNotes(filteredNotes);
+  }, [filteredNotes]);
+
+  const moveNote = useCallback(
+    (dragIndex, hoverIndex) => {
+      const dragNote = notes[dragIndex];
+      setNotes(
+        update(notes, {
+          $splice: [
+            [dragIndex, 1],
+            [hoverIndex, 0, dragNote],
+          ],
+        })
+      );
+    },
+    [notes]
+  );
 
   return (
     <div
-      className={`${!isMobile && classes.wrapper} ${
-        isMobile && filteredNotes.length > 0 && classes.wrapperMobile
-      } ${isMobile && filteredNotes.length > 0 && classes.wrapper} 
-      ${isMobile && filteredNotes.length === 0 && classes.zeroHeight}`}
+      className={cn(
+        { [classes.wrapper]: !isMobile },
+        {
+          [`${classes.wrapperMobile} ${classes.wrapper}`]:
+            isMobile && filteredNotes.length,
+        },
+        { [classes.zeroHeight]: isMobile && filteredNotes.length === 0 }
+      )}
     >
       <List className={`${isMobile && classes.listMobile}`}>
-        {filteredNotes.reverse().map((note) => {
+        {notes.map((note, index) => {
           const { id, name, createdAt, text } = note;
-
           return (
             <NoteListItem
               text={text.split('\n').length >= 2 ? text.split('\n')[1] : ''}
@@ -52,6 +76,8 @@ const NotesList = ({ notes, selectedFolder }) => {
               key={id}
               id={id}
               createdAt={createdAt}
+              index={index}
+              moveNote={moveNote}
               className={classes.listitem}
             />
           );
@@ -61,15 +87,17 @@ const NotesList = ({ notes, selectedFolder }) => {
   );
 };
 
-const mapStateToProps = (state) => ({
-  selectedNote: state.notes.selected,
-  selectedFolder: state.folders.selected,
-  notes: state.notes.list,
-});
+const mapStateToProps = (state) => {
+  const filteredNotes = state.notes.list
+    .filter((note) => note.folder === state.folders.selected)
+    .reverse();
+  return {
+    filteredNotes,
+  };
+};
 
 export default connect(mapStateToProps)(NotesList);
 
 NotesList.propTypes = {
-  notes: PropTypes.arrayOf(PropTypes.object).isRequired,
-  selectedFolder: PropTypes.string.isRequired,
+  filteredNotes: PropTypes.arrayOf(PropTypes.object).isRequired,
 };

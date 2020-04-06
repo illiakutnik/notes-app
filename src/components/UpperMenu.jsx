@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
+import cn from 'classnames';
 import IconButton from '@material-ui/core/IconButton';
 import ListIcon from '@material-ui/icons/List';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -64,7 +65,7 @@ const UpperMenu = ({
 
   return (
     <Grid
-      className={`${classes.grid} ${show && classes.paddingLeft}`}
+      className={cn(`${classes.grid}`, { [`${classes.paddingLeft}`]: show })}
       item
       xs={12}
     >

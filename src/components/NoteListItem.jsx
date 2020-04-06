@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
+import cn from 'classnames';
 import { connect } from 'react-redux';
 import ListItem from '@material-ui/core/ListItem';
 import DeleteIcon from '@material-ui/icons/Delete';
 import IconButton from '@material-ui/core/IconButton';
 import EditIcon from '@material-ui/icons/Edit';
 import Modal from '@material-ui/core/Modal';
-import { useDrag } from 'react-dnd';
+import { useDrag, useDrop } from 'react-dnd';
 
 import { deleteNote, selectNote } from '../actions/notesActions';
 import Note from './Note';
@@ -21,6 +22,7 @@ const useStyles = makeStyles({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     width: '100%',
+    cursor: 'move',
   },
   dragOpacity: {
     opacity: '0.5',
@@ -66,6 +68,8 @@ const NoteListItem = ({
   id,
   createdAt,
   deleteNote,
+  index,
+  moveNote,
 }) => {
   const [showModal, setShowModal] = useState(false);
 
@@ -78,24 +82,56 @@ const NoteListItem = ({
     }
   };
 
+  const ref = useRef(null);
+  const [, drop] = useDrop({
+    accept: ItemTypes.CARD,
+    hover(item, monitor) {
+      if (!ref.current) {
+        return;
+      }
+      const dragIndex = item.index;
+      const hoverIndex = index;
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      const hoverMiddleY =
+        (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+        return;
+      }
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+        return;
+      }
+      moveNote(dragIndex, hoverIndex);
+      item.index = hoverIndex;
+    },
+  });
+
   const [{ isDragging }, drag] = useDrag({
     item: {
       type: ItemTypes.CARD,
       id,
+      index,
     },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
   });
+  drag(drop(ref));
 
   return (
     <ListItem
       onClick={() => selectNote(id)}
       onDoubleClick={dblClickHandler}
-      ref={drag}
-      className={`${classes.listitem} ${isDragging && classes.dragOpacity} ${
-        selectedNote === id && classes.selected
-      }`}
+      ref={ref}
+      className={cn(
+        classes.listitem,
+        { [classes.dragOpacity]: isDragging },
+        { [classes.selected]: selectedNote === id }
+      )}
     >
       <div className={classes.note}>
         <div className={classes.noteMain}>
@@ -147,4 +183,6 @@ NoteListItem.propTypes = {
   selectedNote: PropTypes.string.isRequired,
   deleteNote: PropTypes.func.isRequired,
   selectNote: PropTypes.func.isRequired,
+  index: PropTypes.number.isRequired,
+  moveNote: PropTypes.func.isRequired,
 };
