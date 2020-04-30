@@ -52,7 +52,7 @@ const Note = ({ selectedNote, notes, editNote, closeModal }) => {
             <ArrowBackIcon />
           </IconButton>
           <p className={classes.mobileUpText}>
-            your changes will be save automatically, yeah!!!
+            your changes will be save automatically, yeah!!!!!
           </p>
         </div>
       )}
